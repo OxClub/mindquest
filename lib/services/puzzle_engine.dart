@@ -64,6 +64,6 @@ class PuzzleEngine {
 class Score {
   static int points({required int difficulty, required bool hintUsed, int secondsLeft = 0}) {
     final base = 20 + (difficulty * 15);
-    return max(10, base + min(15, secondsLeft ~/ 4) - (hintUsed ? 10 : 0));
+    return max(10, base + min(15, secondsLeft ~/ 4) - (hintUsed ? 10 : 0)).toInt();
   }
 }

@@ -31,7 +31,7 @@ ThemeData _theme(Brightness brightness) {
   const seed = Color(0xff5b4bdb);
   final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, tertiary: const Color(0xffe78752));
   return ThemeData(colorScheme: scheme, useMaterial3: true, scaffoldBackgroundColor: scheme.surface,
-    cardTheme: CardTheme(elevation: 0, color: scheme.surfaceContainerLow, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
+    cardTheme: CardThemeData(elevation: 0, color: scheme.surfaceContainerLow, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24))),
     inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: scheme.surfaceContainerHighest, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none)),
   );
 }

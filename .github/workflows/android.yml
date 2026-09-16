@@ -15,6 +15,8 @@ jobs:
           channel: stable
       - name: Generate any missing platform boilerplate
         run: flutter create --platforms=android --project-name=mindquest --overwrite .
+      - name: Remove Flutter template test
+        run: rm -f test/widget_test.dart
       - name: Fetch packages
         run: flutter pub get
       - name: Run unit tests
