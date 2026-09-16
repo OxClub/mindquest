@@ -1,0 +1,27 @@
+name: Build MindQuest Android APK
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Generate any missing platform boilerplate
+        run: flutter create --platforms=android --project-name=mindquest --overwrite .
+      - name: Fetch packages
+        run: flutter pub get
+      - name: Run unit tests
+        run: flutter test
+      - name: Build release APK
+        run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mindquest-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
