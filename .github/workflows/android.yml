@@ -13,8 +13,10 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-      - name: Generate any missing platform boilerplate
-        run: flutter create --platforms=android --project-name=mindquest --overwrite .
+      - name: Generate a Flutter-version-matched Android wrapper
+        run: |
+          rm -rf android
+          flutter create --platforms=android --project-name=mindquest .
       - name: Remove Flutter template test
         run: rm -f test/widget_test.dart
       - name: Fetch packages
