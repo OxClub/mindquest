@@ -1,0 +1,17 @@
+{
+  "project_info": {
+    "project_number": "660691888816",
+    "project_id": "mindquest-686e9",
+    "storage_bucket": "mindquest-686e9.firebasestorage.app"
+  },
+  "client": [{
+    "client_info": {
+      "mobilesdk_app_id": "1:660691888816:android:0e180e804ca42c98faa975",
+      "android_client_info": { "package_name": "com.mindquest.app" }
+    },
+    "oauth_client": [],
+    "api_key": [{ "current_key": "AIzaSyApKS6b4E6butMw9jYGTR0o9CMdi5C3vt8" }],
+    "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+  }],
+  "configuration_version": "1"
+}

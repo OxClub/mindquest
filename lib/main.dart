@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'models/profile.dart';
 import 'models/puzzle.dart';
 import 'services/profile_store.dart';
@@ -8,6 +9,7 @@ import 'services/puzzle_engine.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await MobileAds.instance.initialize();
+  await Firebase.initializeApp();
   final store = ProfileStore();
   await store.load();
   runApp(MindQuestApp(store: store));
