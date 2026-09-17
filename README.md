@@ -11,7 +11,7 @@ MindQuest is an original offline-first Flutter brain puzzle game. It offers a de
 - Mental maths
 - Spatial reasoning
 
-All progress stays on-device using `shared_preferences`; this project has no accounts, ads, analytics, Firebase, or network requirement for play.
+Puzzle progress (streaks, points, achievements) stays on-device using `shared_preferences` and needs no network connection to play. The app also integrates anonymous Firebase authentication (for a future leaderboard) and an AdMob banner ad; both require network access and are configured for the `mindquest-686e9` Firebase project.
 
 ## Run locally
 

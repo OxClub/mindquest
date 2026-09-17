@@ -13,24 +13,81 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+
+      - name: Run tests
+        run: |
+          flutter pub get
+          flutter test
+
       - name: Generate a Flutter-version-matched Android wrapper
         run: |
+          set -euo pipefail
+          TARGET_PKG="com.mindquest.app"
+
           cp android/app/google-services.json /tmp/mindquest-google-services.json
           rm -rf android
           flutter create --platforms=android --project-name=mindquest .
+
+          # flutter create defaults to org "com.example" when --org isn't
+          # passed, so the generated applicationId is "com.example.mindquest" —
+          # NOT the "com.mindquest.app" that google-services.json declares.
+          # Firebase matches itself against google-services.json by the app's
+          # real package name, so leaving this mismatched makes Firebase auth
+          # and the leaderboard silently fail in the built APK. Detect
+          # whatever package flutter create actually used and rename it.
+          GRADLE_FILE=android/app/build.gradle.kts
+          [ -f "$GRADLE_FILE" ] || GRADLE_FILE=android/app/build.gradle
+
+          GENERATED_PKG=$(grep -oE 'applicationId[[:space:]]*=?[[:space:]]*"[^"]+"' "$GRADLE_FILE" \
+            | head -1 | grep -oE '"[^"]+"' | tr -d '"')
+
+          if [ -z "$GENERATED_PKG" ]; then
+            echo "::error::Could not detect the applicationId flutter create generated in $GRADLE_FILE"
+            exit 1
+          fi
+
+          if [ "$GENERATED_PKG" != "$TARGET_PKG" ]; then
+            sed -i "s/$GENERATED_PKG/$TARGET_PKG/g" "$GRADLE_FILE"
+
+            OLD_DIR="android/app/src/main/kotlin/$(echo "$GENERATED_PKG" | tr '.' '/')"
+            NEW_DIR="android/app/src/main/kotlin/$(echo "$TARGET_PKG" | tr '.' '/')"
+            if [ -f "$OLD_DIR/MainActivity.kt" ]; then
+              mkdir -p "$(dirname "$NEW_DIR")"
+              mv "$OLD_DIR" "$NEW_DIR"
+              sed -i "s/package $GENERATED_PKG/package $TARGET_PKG/" "$NEW_DIR/MainActivity.kt"
+            fi
+          fi
+
+          # Verify the rename actually took before trusting it downstream.
+          grep -q "$TARGET_PKG" "$GRADLE_FILE" || { echo "::error::applicationId/namespace was not set to $TARGET_PKG"; exit 1; }
+          if grep -q "package $GENERATED_PKG" "android/app/src/main/kotlin/$(echo "$TARGET_PKG" | tr '.' '/')/MainActivity.kt" 2>/dev/null; then
+            echo "::error::MainActivity.kt still declares the old package $GENERATED_PKG"
+            exit 1
+          fi
+
           cp /tmp/mindquest-google-services.json android/app/google-services.json
+
           if [ -f android/settings.gradle.kts ]; then
             sed -i '/id("com.android.application")/a\    id("com.google.gms.google-services") version "4.4.2" apply false' android/settings.gradle.kts
             sed -i '/id("dev.flutter.flutter-gradle-plugin")/a\    id("com.google.gms.google-services")' android/app/build.gradle.kts
+            grep -q 'com.google.gms.google-services' android/settings.gradle.kts || { echo "::error::google-services plugin was not registered in settings.gradle.kts"; exit 1; }
+            grep -q 'com.google.gms.google-services' android/app/build.gradle.kts || { echo "::error::google-services plugin was not applied in app/build.gradle.kts"; exit 1; }
           else
             sed -i '/id "com.android.application"/a\    id "com.google.gms.google-services" version "4.4.2" apply false' android/settings.gradle
             sed -i '/id "dev.flutter.flutter-gradle-plugin"/a\    id "com.google.gms.google-services"' android/app/build.gradle
+            grep -q 'com.google.gms.google-services' android/settings.gradle || { echo "::error::google-services plugin was not registered in settings.gradle"; exit 1; }
+            grep -q 'com.google.gms.google-services' android/app/build.gradle || { echo "::error::google-services plugin was not applied in app/build.gradle"; exit 1; }
           fi
+
           sed -i '/<application /a\        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-6509298197152386~4459812651"/>' android/app/src/main/AndroidManifest.xml
+          grep -q 'com.google.android.gms.ads.APPLICATION_ID' android/app/src/main/AndroidManifest.xml || { echo "::error::AdMob APPLICATION_ID meta-data was not injected into AndroidManifest.xml"; exit 1; }
+
       - name: Fetch packages
         run: flutter pub get
+
       - name: Build release APK
         run: flutter build apk --release
+
       - uses: actions/upload-artifact@v4
         with:
           name: mindquest-release-apk
