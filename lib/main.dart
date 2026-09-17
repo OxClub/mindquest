@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'models/profile.dart';
 import 'models/puzzle.dart';
 import 'services/profile_store.dart';
@@ -6,6 +7,7 @@ import 'services/puzzle_engine.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await MobileAds.instance.initialize();
   final store = ProfileStore();
   await store.load();
   runApp(MindQuestApp(store: store));
@@ -54,7 +56,7 @@ class QuestShell extends StatefulWidget { const QuestShell({super.key, required 
 class _QuestShellState extends State<QuestShell> {
   int tab = 0; void changed() { setState(() {}); widget.refresh(); }
   @override Widget build(BuildContext context) { final pages = [HomeTab(store: widget.store, changed: changed), PracticeTab(store: widget.store, changed: changed), ProgressTab(store: widget.store), SettingsTab(store: widget.store, changed: changed)];
-    return Scaffold(body: SafeArea(child: pages[tab]), bottomNavigationBar: NavigationBar(selectedIndex: tab, onDestinationSelected: (v) => setState(() => tab = v), destinations: const [NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Quest'), NavigationDestination(icon: Icon(Icons.extension_outlined), selectedIcon: Icon(Icons.extension), label: 'Practice'), NavigationDestination(icon: Icon(Icons.insights_outlined), selectedIcon: Icon(Icons.insights), label: 'Progress'), NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Settings')])); }
+    return Scaffold(body: SafeArea(child: pages[tab]), bottomNavigationBar: Column(mainAxisSize: MainAxisSize.min, children: [const BannerAdWidget(), NavigationBar(selectedIndex: tab, onDestinationSelected: (v) => setState(() => tab = v), destinations: const [NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Quest'), NavigationDestination(icon: Icon(Icons.extension_outlined), selectedIcon: Icon(Icons.extension), label: 'Practice'), NavigationDestination(icon: Icon(Icons.insights_outlined), selectedIcon: Icon(Icons.insights), label: 'Progress'), NavigationDestination(icon: Icon(Icons.tune_outlined), selectedIcon: Icon(Icons.tune), label: 'Settings')]) ])); }
 }
 
 class HomeTab extends StatelessWidget { const HomeTab({super.key, required this.store, required this.changed}); final ProfileStore store; final VoidCallback changed;
@@ -120,3 +122,12 @@ class SettingsTab extends StatelessWidget { const SettingsTab({super.key, requir
 class _Logo extends StatelessWidget { const _Logo(); @override Widget build(BuildContext context) => Container(width: 38,height: 38, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.psychology_alt, color: Colors.white)); }
 class _Metric extends StatelessWidget { const _Metric({required this.icon,required this.label,required this.value,required this.color}); final IconData icon; final String label,value; final Color color; @override Widget build(BuildContext context) => Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Icon(icon,color: color),const SizedBox(height: 10),Text(value,style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),Text(label,style: Theme.of(context).textTheme.labelSmall)]))); }
 class _CompletionCard extends StatelessWidget { const _CompletionCard({required this.store}); final ProfileStore store; @override Widget build(BuildContext context) => Card(color: Theme.of(context).colorScheme.tertiaryContainer, child: Padding(padding: const EdgeInsets.all(20), child: Column(children: [const Icon(Icons.celebration, size: 42), const SizedBox(height: 8), Text('Daily quest complete!', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)), Text('Your streak is now ${store.profile.streak} day${store.profile.streak == 1 ? '' : 's'}.')]))); }
+
+class BannerAdWidget extends StatefulWidget { const BannerAdWidget({super.key}); @override State<BannerAdWidget> createState() => _BannerAdWidgetState(); }
+class _BannerAdWidgetState extends State<BannerAdWidget> {
+  BannerAd? _ad;
+  bool _loaded = false;
+  @override void initState() { super.initState(); _ad = BannerAd(adUnitId: 'ca-app-pub-6509298197152386/6571417785', size: AdSize.banner, request: const AdRequest(), listener: BannerAdListener(onAdLoaded: (_) { if (mounted) setState(() => _loaded = true); }, onAdFailedToLoad: (ad, _) { ad.dispose(); })); _ad!.load(); }
+  @override void dispose() { _ad?.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) => _loaded ? SizedBox(width: _ad!.size.width.toDouble(), height: _ad!.size.height.toDouble(), child: AdWidget(ad: _ad!)) : const SizedBox.shrink();
+}

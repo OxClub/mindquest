@@ -17,6 +17,7 @@ jobs:
         run: |
           rm -rf android
           flutter create --platforms=android --project-name=mindquest .
+          sed -i '/<application /a\        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-6509298197152386~4459812651"/>' android/app/src/main/AndroidManifest.xml
       - name: Fetch packages
         run: flutter pub get
       - name: Build release APK
