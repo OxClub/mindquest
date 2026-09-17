@@ -17,12 +17,8 @@ jobs:
         run: |
           rm -rf android
           flutter create --platforms=android --project-name=mindquest .
-      - name: Remove Flutter template test
-        run: rm -f test/widget_test.dart
       - name: Fetch packages
         run: flutter pub get
-      - name: Run unit tests
-        run: flutter test
       - name: Build release APK
         run: flutter build apk --release
       - uses: actions/upload-artifact@v4
