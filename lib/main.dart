@@ -8,8 +8,23 @@ import 'services/puzzle_engine.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await MobileAds.instance.initialize();
-  await Firebase.initializeApp();
+
+  // Neither of these may throw past this point: if Firebase's config
+  // doesn't match the installed package, or AdMob isn't ready yet (e.g.
+  // no network on first launch), an uncaught exception here happens
+  // before runApp() is ever called — the app would crash with zero UI
+  // the instant it's tapped, with no error screen to show for it.
+  try {
+    await MobileAds.instance.initialize();
+  } catch (e) {
+    debugPrint('AdMob failed to initialize: $e');
+  }
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase failed to initialize: $e');
+  }
+
   final store = ProfileStore();
   await store.load();
   runApp(MindQuestApp(store: store));
