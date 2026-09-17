@@ -79,7 +79,14 @@ jobs:
             grep -q 'com.google.gms.google-services' android/app/build.gradle || { echo "::error::google-services plugin was not applied in app/build.gradle"; exit 1; }
           fi
 
-          sed -i '/<application/a\        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-6509298197152386~4459812651"/>' android/app/src/main/AndroidManifest.xml
+          # Insert right before the closing </application> tag rather than
+          # after the opening <application tag: newer Flutter templates
+          # spread the opening tag's attributes across multiple lines, so
+          # inserting right after the word "<application" lands the
+          # meta-data before the tag's own ">" even closes, producing
+          # invalid XML. Before </application> is always a valid child
+          # position no matter how the opening tag is formatted.
+          sed -i '/<\/application>/i\        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-6509298197152386~4459812651"/>' android/app/src/main/AndroidManifest.xml
           grep -q 'com.google.android.gms.ads.APPLICATION_ID' android/app/src/main/AndroidManifest.xml || { echo "::error::AdMob APPLICATION_ID meta-data was not injected into AndroidManifest.xml"; exit 1; }
 
       - name: Fetch packages
