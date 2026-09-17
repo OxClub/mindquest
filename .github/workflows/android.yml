@@ -19,8 +19,13 @@ jobs:
           rm -rf android
           flutter create --platforms=android --project-name=mindquest .
           cp /tmp/mindquest-google-services.json android/app/google-services.json
-          sed -i '/id "com.android.application"/a\    id "com.google.gms.google-services" version "4.4.2" apply false' android/settings.gradle
-          sed -i '/id "dev.flutter.flutter-gradle-plugin"/a\    id "com.google.gms.google-services"' android/app/build.gradle
+          if [ -f android/settings.gradle.kts ]; then
+            sed -i '/id("com.android.application")/a\    id("com.google.gms.google-services") version "4.4.2" apply false' android/settings.gradle.kts
+            sed -i '/id("dev.flutter.flutter-gradle-plugin")/a\    id("com.google.gms.google-services")' android/app/build.gradle.kts
+          else
+            sed -i '/id "com.android.application"/a\    id "com.google.gms.google-services" version "4.4.2" apply false' android/settings.gradle
+            sed -i '/id "dev.flutter.flutter-gradle-plugin"/a\    id "com.google.gms.google-services"' android/app/build.gradle
+          fi
           sed -i '/<application /a\        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-6509298197152386~4459812651"/>' android/app/src/main/AndroidManifest.xml
       - name: Fetch packages
         run: flutter pub get
